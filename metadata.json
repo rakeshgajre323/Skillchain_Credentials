@@ -1,0 +1,5 @@
+{
+  "name": "SkillChain Credentials",
+  "description": "A blockchain-based verification platform for vocational certificates using React, Node.js, and MongoDB.",
+  "requestFramePermissions": []
+}
