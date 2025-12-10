@@ -9,19 +9,21 @@ const connectDB = async (): Promise<void> => {
     const connString = process.env.MONGO_URI;
 
     if (!connString) {
-      throw new Error("MONGO_URI is not defined in environment variables");
+      console.warn("⚠️ MONGO_URI is not defined in environment variables. DB features will fail.");
+      return;
     }
 
     const conn = await mongoose.connect(connString);
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
+    // We do NOT exit the process here. We log the error so the server can still start
+    // and serve the /health endpoint for debugging.
     if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
+      console.error(`❌ MongoDB Connection Error: ${error.message}`);
     } else {
-      console.error('Unknown database connection error');
+      console.error('❌ Unknown database connection error');
     }
-    (process as any).exit(1);
   }
 };
 
