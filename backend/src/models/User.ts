@@ -16,24 +16,39 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'institute', 'company', 'admin'],
-    default: 'student',
+    enum: ['STUDENT', 'INSTITUTE', 'COMPANY', 'ADMIN'],
+    default: 'STUDENT',
   },
+  status: {
+    type: String,
+    enum: ['pending', 'active', 'suspended'],
+    default: 'pending',
+  },
+  phone: {
+    type: String,
+    required: false,
+  },
+  
   // Student Specific
   apparId: {
     type: String,
     unique: true,
-    sparse: true, // Only enforces uniqueness if the field exists
+    sparse: true, 
   },
   dob: Date,
-  phone: String,
-  
+  instituteId: String,
+
   // Institute Specific
   recognitionNumber: String,
+  address: String,
+  verificationDocuments: String, // URL to docs
   isVerified: {
     type: Boolean,
     default: false,
   },
+
+  // Company Specific
+  website: String,
 }, {
   timestamps: true,
 });

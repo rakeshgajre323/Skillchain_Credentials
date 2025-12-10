@@ -1,49 +1,77 @@
 import React, { useState } from 'react';
-import { UserRole } from '../types';
+import { UserRole, User } from '../types';
+import { getApiBase } from '../utils/api';
 
 interface LoginFormProps {
-  onLogin: (role: UserRole) => void;
+  onLoginSuccess: (user: User, token: string) => void;
+  onPendingVerification: (userId: string, email: string) => void;
   onCancel: () => void;
+  onSwitchToSignup: () => void;
+  onForgotPassword: () => void; // New prop
 }
 
-export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onCancel }) => {
-  const [role, setRole] = useState<UserRole>(UserRole.STUDENT);
+export const LoginForm: React.FC<LoginFormProps> = ({ 
+  onLoginSuccess, 
+  onPendingVerification, 
+  onCancel, 
+  onSwitchToSignup,
+  onForgotPassword
+}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-        onLogin(role);
-        setIsLoading(false);
-    }, 1000);
+    setError('');
+
+    const apiBase = getApiBase();
+    try {
+      const res = await fetch(`${apiBase}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 403 && data.status === 'pending') {
+         // User exists but not verified
+         onPendingVerification(data.userId, email);
+         return;
+      }
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      // Success
+      onLoginSuccess(data.user, data.token);
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 w-full max-w-md mx-auto">
       <div className="w-full space-y-8 bg-white p-8 rounded-xl border border-slate-200 shadow-sm">
         <div className="text-center">
-            <h2 className="mt-6 text-3xl font-bold text-slate-900">Sign in to SkillChain</h2>
-            <p className="mt-2 text-sm text-slate-600">Select your role to continue</p>
+            <h2 className="mt-6 text-3xl font-bold text-slate-900">Sign in</h2>
+            <p className="mt-2 text-sm text-slate-600">Welcome back to SkillChain</p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100 rounded-lg">
-             {[UserRole.STUDENT, UserRole.INSTITUTE, UserRole.COMPANY].map((r) => (
-                 <button
-                    type="button"
-                    key={r}
-                    onClick={() => setRole(r)}
-                    className={`text-xs font-medium py-2 rounded-md transition-all ${role === r ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-900'}`}
-                 >
-                     {r}
-                 </button>
-             ))}
-          </div>
+        {error && (
+            <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm border border-red-200">
+                {error}
+            </div>
+        )}
 
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email-address" className="sr-only">Email address</label>
@@ -75,9 +103,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onCancel }) => {
 
           <div className="flex items-center justify-between">
             <div className="text-sm">
-              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <button 
+                type="button" 
+                onClick={onForgotPassword} 
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
                 Forgot your password?
-              </a>
+              </button>
             </div>
           </div>
 
@@ -98,6 +130,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onCancel }) => {
               </button>
           </div>
         </form>
+
+        <div className="text-center text-sm border-t border-slate-100 pt-4">
+            <span className="text-slate-600">Don't have an account? </span>
+            <button onClick={onSwitchToSignup} className="font-medium text-indigo-600 hover:text-indigo-500">
+                Create one
+            </button>
+        </div>
       </div>
     </div>
   );

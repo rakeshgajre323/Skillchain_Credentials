@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import connectDB from './src/config/db';
 import Certificate from './src/models/Certificate';
+import User from './src/models/User';
+import authRoutes from './src/routes/auth';
 
 // Load environment variables
 dotenv.config();
@@ -12,13 +14,16 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
-app.use(express.json() as express.RequestHandler);
+app.use(cors() as any);
+app.use(express.json());
 
 // Connect to MongoDB
 connectDB();
 
 // --- Routes ---
+
+// Auth Routes
+app.use('/api/auth', authRoutes);
 
 // Health Check (Standardized with DB Status)
 app.get('/health', (req, res) => {
@@ -60,6 +65,27 @@ app.get('/api/certificates', async (req, res) => {
   }
 });
 
+// POST /api/certificates - Create a new certificate
+app.post('/api/certificates', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ message: 'Database disconnected' });
+    }
+    
+    // In a real app, verify user role from token middleware here
+    const cert = await Certificate.create({
+      ...req.body,
+      // Ensure certificateId is unique if not provided
+      certificateId: req.body.certificateId || `crt-${Date.now()}-${Math.floor(Math.random()*1000)}`
+    });
+    
+    res.status(201).json(cert);
+  } catch (error) {
+    console.error('Error creating certificate:', error);
+    res.status(500).json({ message: 'Failed to create certificate' });
+  }
+});
+
 // GET /api/certificates/student/:apparId - Fetch by Student ID
 app.get('/api/certificates/student/:apparId', async (req, res) => {
   try {
@@ -70,6 +96,43 @@ app.get('/api/certificates/student/:apparId', async (req, res) => {
     res.json(certificates);
   } catch (error) {
     console.error('Error fetching student certificates:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
+// GET /api/admin/stats - Admin Dashboard Stats
+app.get('/api/admin/stats', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ message: 'Database disconnected' });
+    }
+
+    const totalUsers = await User.countDocuments();
+    const totalCertificates = await Certificate.countDocuments();
+    
+    const students = await User.countDocuments({ role: 'STUDENT' });
+    const institutes = await User.countDocuments({ role: 'INSTITUTE' });
+    const companies = await User.countDocuments({ role: 'COMPANY' });
+
+    // Mock trend data (in production, aggregate via Mongoose)
+    const recentActivity = [
+        { name: 'Mon', newUsers: 4, issuedCerts: 2 },
+        { name: 'Tue', newUsers: 3, issuedCerts: 5 },
+        { name: 'Wed', newUsers: 7, issuedCerts: 8 },
+        { name: 'Thu', newUsers: 5, issuedCerts: 4 },
+        { name: 'Fri', newUsers: 9, issuedCerts: 12 },
+        { name: 'Sat', newUsers: 2, issuedCerts: 1 },
+        { name: 'Sun', newUsers: 1, issuedCerts: 0 },
+    ];
+
+    res.json({
+      totalUsers,
+      totalCertificates,
+      roles: { students, institutes, companies },
+      recentActivity
+    });
+  } catch (error) {
+    console.error('Admin stats error:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 });

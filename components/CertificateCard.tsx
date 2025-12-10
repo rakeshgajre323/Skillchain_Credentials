@@ -7,9 +7,20 @@ interface CertificateCardProps {
 }
 
 export const CertificateCard: React.FC<CertificateCardProps> = ({ cert, onVerify }) => {
+  
+  const handleDownload = () => {
+    if (!cert.ipfsCid) {
+      alert("No IPFS CID available for this certificate.");
+      return;
+    }
+    const safeFilename = cert.courseName.replace(/[^a-zA-Z0-9-_]/g, '_');
+    const gatewayUrl = `https://dweb.link/ipfs/${cert.ipfsCid}?filename=${safeFilename}.pdf`;
+    window.open(gatewayUrl, '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col h-full">
-      <div className="p-6 flex-grow">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-xl hover:scale-[1.02] hover:border-indigo-100 transition-all duration-300 ease-out overflow-hidden flex flex-col h-full transform backface-hidden">
+      <div className="p-6 flex-grow relative">
         <div className="flex justify-between items-start mb-4 gap-4">
           <div>
             <h3 className="text-lg font-semibold text-slate-900 line-clamp-2 leading-tight" title={cert.courseName}>
@@ -23,17 +34,17 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({ cert, onVerify
         </div>
         
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 group-hover:bg-indigo-50/50 transition-colors">
             <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-medium">Grade</p>
             <p className="font-semibold text-slate-900">{cert.grade}</p>
           </div>
-          <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+          <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 group-hover:bg-indigo-50/50 transition-colors">
             <p className="text-xs text-slate-500 uppercase tracking-wider mb-1 font-medium">Date</p>
             <p className="font-semibold text-slate-900">{cert.issueDate}</p>
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 opacity-80 hover:opacity-100 transition-opacity">
           <div className="flex items-center gap-2 text-xs text-slate-500 font-mono bg-slate-50 p-2 rounded border border-slate-100">
             <span className="flex-shrink-0 font-bold text-slate-500">TX:</span>
             <span className="truncate flex-1" title={cert.blockchainTx}>{cert.blockchainTx}</span>
@@ -53,7 +64,8 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({ cert, onVerify
           Verify Authenticity &rarr;
         </button>
         <button 
-          className="text-slate-400 hover:text-slate-600 p-2 hover:bg-slate-200 rounded-full transition-colors"
+          onClick={handleDownload}
+          className="text-slate-400 hover:text-indigo-600 p-2 hover:bg-slate-200 rounded-full transition-colors transform hover:scale-110 active:scale-95"
           title="Download Certificate"
           aria-label="Download Certificate"
         >

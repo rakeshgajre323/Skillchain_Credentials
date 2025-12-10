@@ -3,22 +3,53 @@ import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
 import { LandingPage } from './components/LandingPage';
 import { LoginForm } from './components/LoginForm';
-import { UserRole, ViewState } from './types';
+import { SignUpForm } from './components/SignUpForm';
+import { VerifyOtp } from './components/VerifyOtp';
+import { ForgotPassword } from './components/ForgotPassword';
+import { ResetPassword } from './components/ResetPassword';
+import { AddCertificateForm } from './components/AddCertificateForm';
+import { AdminDashboard } from './components/AdminDashboard';
+import { UserRole, ViewState, User } from './types';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('LANDING');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [role, setRole] = useState<UserRole | undefined>(undefined);
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  
+  // Temporary state for auth flows
+  const [pendingUserId, setPendingUserId] = useState<string>('');
+  const [pendingEmail, setPendingEmail] = useState<string>('');
+  const [resetEmail, setResetEmail] = useState<string>('');
 
-  const handleLogin = (userRole: UserRole) => {
-    setIsAuthenticated(true);
-    setRole(userRole);
+  const isAuthenticated = !!token;
+
+  const handleLoginSuccess = (userData: User, authToken: string) => {
+    setUser(userData);
+    setToken(authToken);
+    setCurrentView('DASHBOARD');
+  };
+
+  const handlePendingVerification = (userId: string, email: string) => {
+    setPendingUserId(userId);
+    setPendingEmail(email);
+    setCurrentView('VERIFY_OTP');
+  };
+
+  const handleSignUpSuccess = (userId: string, email: string) => {
+    setPendingUserId(userId);
+    setPendingEmail(email);
+    setCurrentView('VERIFY_OTP');
+  };
+
+  const handleVerified = (authToken: string, userData: User) => {
+    setToken(authToken);
+    setUser(userData);
     setCurrentView('DASHBOARD');
   };
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    setRole(undefined);
+    setUser(null);
+    setToken(null);
     setCurrentView('LANDING');
   };
 
@@ -31,11 +62,26 @@ const App: React.FC = () => {
       setCurrentView(view);
   };
 
+  // Forgot Password Flow
+  const handleForgotPassword = () => {
+    setCurrentView('FORGOT_PASSWORD');
+  };
+
+  const handleResetCodeSent = (email: string) => {
+    setResetEmail(email);
+    setCurrentView('RESET_PASSWORD');
+  };
+
+  const handlePasswordResetSuccess = () => {
+    setCurrentView('LOGIN');
+    alert("Password reset successfully. Please login with your new password.");
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
       <Navbar 
         isAuthenticated={isAuthenticated} 
-        role={role} 
+        role={user?.role} 
         onNavigate={handleNavigate}
         onLogout={handleLogout} 
       />
@@ -47,13 +93,64 @@ const App: React.FC = () => {
 
         {currentView === 'LOGIN' && (
             <LoginForm 
-                onLogin={handleLogin} 
+                onLoginSuccess={handleLoginSuccess}
+                onPendingVerification={handlePendingVerification}
                 onCancel={() => setCurrentView('LANDING')} 
+                onSwitchToSignup={() => setCurrentView('SIGNUP')}
+                onForgotPassword={handleForgotPassword}
             />
         )}
 
+        {currentView === 'SIGNUP' && (
+            <SignUpForm
+                onSuccess={handleSignUpSuccess}
+                onCancel={() => setCurrentView('LANDING')}
+                onSwitchToLogin={() => setCurrentView('LOGIN')}
+            />
+        )}
+
+        {currentView === 'VERIFY_OTP' && (
+            <VerifyOtp
+                userId={pendingUserId}
+                email={pendingEmail}
+                onVerified={handleVerified}
+                onCancel={() => setCurrentView('LOGIN')}
+            />
+        )}
+
+        {currentView === 'FORGOT_PASSWORD' && (
+            <ForgotPassword
+                onCodeSent={handleResetCodeSent}
+                onCancel={() => setCurrentView('LOGIN')}
+            />
+        )}
+
+        {currentView === 'RESET_PASSWORD' && (
+            <ResetPassword
+                email={resetEmail}
+                onSuccess={handlePasswordResetSuccess}
+                onCancel={() => setCurrentView('LOGIN')}
+            />
+        )}
+
+        {currentView === 'ADD_CERTIFICATE' && (
+          <AddCertificateForm
+            issuerName={user?.name || 'Unknown Institute'}
+            onCancel={() => setCurrentView('DASHBOARD')}
+            onSuccess={() => setCurrentView('DASHBOARD')}
+          />
+        )}
+
         {currentView === 'DASHBOARD' && (
-            <Dashboard />
+            user?.role === UserRole.ADMIN ? (
+              <AdminDashboard />
+            ) : (
+              <Dashboard 
+                userRole={user?.role}
+                userName={user?.name}
+                onAddCertificate={() => setCurrentView('ADD_CERTIFICATE')}
+              />
+            )
         )}
       </main>
 

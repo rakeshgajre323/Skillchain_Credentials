@@ -5,7 +5,7 @@ export enum UserRole {
   ADMIN = 'ADMIN'
 }
 
-export type ViewState = 'LANDING' | 'LOGIN' | 'DASHBOARD';
+export type ViewState = 'LANDING' | 'LOGIN' | 'SIGNUP' | 'VERIFY_OTP' | 'DASHBOARD' | 'FORGOT_PASSWORD' | 'RESET_PASSWORD' | 'ADD_CERTIFICATE';
 
 export interface User {
   id: string;
@@ -15,6 +15,8 @@ export interface User {
   apparId?: string; // For students
   recognitionNumber?: string; // For institutes
   isVerified?: boolean;
+  phone?: string;
+  status?: 'pending' | 'active' | 'suspended';
 }
 
 export interface Certificate {
