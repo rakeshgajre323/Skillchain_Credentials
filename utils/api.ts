@@ -1,12 +1,17 @@
 export function getApiBase() {
-  // Check for Vite environment variable
-  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) {
-    return (import.meta as any).env.VITE_API_BASE_URL.replace(/\/+$/, '');
+  try {
+    // Check for Vite environment variable
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) {
+      return (import.meta as any).env.VITE_API_BASE_URL.replace(/\/+$/, '');
+    }
+    // Check for Next.js/Node environment variable
+    if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) {
+      return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, '');
+    }
+  } catch (e) {
+    // Ignore access errors in strict environments
   }
-  // Check for Next.js/Node environment variable
-  if (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, '');
-  }
+  
   // Fallback to localhost default
   return 'http://localhost:5000';
 }

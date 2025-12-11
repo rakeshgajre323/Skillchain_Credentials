@@ -6,11 +6,11 @@ import mongoose from 'mongoose';
  */
 const connectDB = async (): Promise<void> => {
   try {
-    const connString = process.env.MONGO_URI;
+    // Fallback to local mongo instance if env var is missing
+    const connString = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/skillchain';
 
-    if (!connString) {
-      console.warn("⚠️ MONGO_URI is not defined in environment variables. DB features will fail.");
-      return;
+    if (!process.env.MONGO_URI) {
+      console.warn("⚠️ MONGO_URI not found in env. Attempting default local connection...");
     }
 
     const conn = await mongoose.connect(connString);

@@ -30,6 +30,19 @@ const MOCK_CERTIFICATES: Certificate[] = [
     ipfsCid: 'QmZ43...kLm2',
     blockchainTx: '0x82301...1120',
     isValid: true,
+  },
+  {
+    id: '3',
+    certificateId: 'crt-55123-uuid',
+    studentName: 'Rakesh Gajre',
+    studentApparId: 'APPAR-2023-992',
+    courseName: 'UI/UX Design Principles',
+    grade: 'O',
+    issuerName: 'Design School Global',
+    issueDate: '2023-05-10',
+    ipfsCid: 'QmP99...kXy1',
+    blockchainTx: '0x99123...4451',
+    isValid: true,
   }
 ];
 
@@ -41,12 +54,12 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName, onAddCertificate }) => {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
-  // Added 'db-down' state to be specific about errors
   const [status, setStatus] = useState<'checking' | 'ok' | 'db-down' | 'offline'>('checking');
   const [message, setMessage] = useState<string>('');
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string>('');
   const [retryTrigger, setRetryTrigger] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleVerify = (id: string) => {
     setVerifyingId(id);
@@ -59,12 +72,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName, onAddC
     const apiBase = getApiBase();
 
     try {
-      // 1. Check Health AND DB Status
-      const healthRes = await fetchWithTimeout(`${apiBase}/health`, {}, 5000);
+      // 1. Check Health - Fast timeout
+      const healthRes = await fetchWithTimeout(`${apiBase}/health`, {}, 2000).catch(() => null);
       
-      if (healthRes.ok) {
-        const healthData = await healthRes.json();
-        // Check if DB is actually connected
+      if (healthRes && healthRes.ok) {
+        const healthData = await healthRes.json().catch(() => ({}));
         if (healthData.dbStatus !== 'connected') {
            setStatus('db-down');
            setMessage('Database Disconnected');
@@ -72,16 +84,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName, onAddC
            return;
         }
       } else {
-        throw new Error(`Health check failed: ${healthRes.status}`);
+        throw new Error('Health check failed');
       }
       
-      // 2. Try Seeding (optional)
-      try { await fetchWithTimeout(`${apiBase}/api/seed-check`, {}, 3000); } catch (e) {}
-
-      // 3. Fetch Data
-      const response = await fetchWithTimeout(`${apiBase}/api/certificates`);
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
+      // 2. Fetch Data
+      const response = await fetchWithTimeout(`${apiBase}/api/certificates`, {}, 4000).catch(() => null);
+      if (!response || !response.ok) {
+        throw new Error(`Server returned ${response ? response.status : 'no response'}`);
       }
       
       const data = await response.json();
@@ -89,7 +98,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName, onAddC
       setStatus('ok');
       setMessage('Connected');
     } catch (err) {
-      console.warn('Backend connection failed:', err);
       setStatus('offline');
       setMessage('Backend Unavailable');
       setCertificates(MOCK_CERTIFICATES);
@@ -104,194 +112,217 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName, onAddC
     setRetryTrigger(prev => prev + 1);
   };
 
+  const filteredCertificates = certificates.filter(cert => 
+    cert.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    cert.issuerName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // --- Render Loading State ---
   if (status === 'checking') {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="text-slate-500 text-sm">{message}</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in duration-500">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+             <div className="w-8 h-8 bg-white rounded-full"></div>
+          </div>
         </div>
+        <p className="mt-6 text-slate-500 font-medium tracking-wide text-sm uppercase">{message}</p>
       </div>
     );
   }
 
+  // --- Dashboard Components ---
+
+  const StatCard = ({ label, value, icon, colorClass }: any) => (
+    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow flex items-start justify-between">
+      <div>
+        <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">{label}</p>
+        <h3 className="text-3xl font-bold text-slate-800">{value}</h3>
+      </div>
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colorClass}`}>
+        {icon}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-      {/* Welcome Section */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">
-              Welcome back, {userName || 'User'}
-            </h1>
-            <div className="mt-2 flex items-center gap-4 text-sm text-slate-600">
-                <span className="bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
-                  Role: <span className="font-semibold text-slate-900">{userRole}</span>
-                </span>
-                {userRole === UserRole.STUDENT && (
-                  <span className="bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
-                    APPAR ID: <span className="font-mono font-semibold text-slate-900">APPAR-2023-992</span>
-                  </span>
-                )}
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-8">
+      
+      {/* 1. Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+            Dashboard
+          </h1>
+          <p className="text-slate-500 mt-2 text-lg">
+            Welcome back, <span className="text-slate-900 font-semibold">{userName || 'User'}</span>. 
+            Here is your verified credential wallet.
+          </p>
+        </div>
+
+        {/* Status Indicator */}
+        <div className="flex items-center gap-3">
              {status === 'ok' ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-2 px-3 text-sm text-green-700 flex items-center gap-2">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 text-sm font-medium">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                     </span>
-                    <span>Live Data</span>
-                </div>
-             ) : status === 'db-down' ? (
-                <div className="flex items-center gap-3">
-                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-orange-800 flex items-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                      <span>Database Disconnected</span>
-                   </div>
-                   <button 
-                      onClick={handleRetry}
-                      className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
-                   >
-                      Retry
-                   </button>
+                    Live Network
                 </div>
              ) : (
-                <>
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 flex items-center gap-2">
-                        <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                        </svg>
-                        <span>Offline Mode</span>
-                    </div>
-                    <button 
-                      onClick={handleRetry}
-                      className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Retry
-                    </button>
-                </>
+                <button 
+                  onClick={handleRetry}
+                  className="flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-full border border-amber-100 text-sm font-medium hover:bg-amber-100 transition-colors"
+                >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    {status === 'db-down' ? 'Database Offline' : 'Offline Mode'} (Retry)
+                </button>
              )}
-          </div>
         </div>
       </div>
 
-      {/* Dashboard Content */}
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-slate-800">
-            {userRole === UserRole.INSTITUTE ? 'Issued Certificates' : 'My Credentials'}
-          </h2>
-          <div className="flex gap-2">
-              <button className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50">
-                  Filter
-              </button>
-              
-              {userRole === UserRole.INSTITUTE ? (
+      {/* 2. Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatCard 
+          label="Total Credentials" 
+          value={certificates.length} 
+          colorClass="bg-blue-50 text-blue-600"
+          icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+        />
+        <StatCard 
+          label="Latest Grade" 
+          value={certificates.length > 0 ? certificates[0].grade : '-'} 
+          colorClass="bg-emerald-50 text-emerald-600"
+          icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+        />
+        <StatCard 
+          label="Pending Verifications" 
+          value="0" 
+          colorClass="bg-purple-50 text-purple-600"
+          icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+        />
+      </div>
+
+      {/* 3. Controls & Filter */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+         <div className="relative w-full md:w-96 group">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input 
+              type="text" 
+              placeholder="Search certificates, issuers..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full pl-10 pr-3 py-3 border-none rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-0 bg-transparent"
+            />
+         </div>
+         
+         <div className="flex gap-2 w-full md:w-auto p-2 md:p-0">
+             {userRole === UserRole.INSTITUTE && (
                 <button 
                   onClick={onAddCertificate}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm flex items-center gap-2"
+                  className="w-full md:w-auto px-6 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add Certificate
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                  Issue New
                 </button>
-              ) : (
-                <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm">
-                  Share Profile
-                </button>
-              )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {certificates.length > 0 ? (
-            certificates.map((cert) => (
-              <CertificateCard 
-                key={cert.id} 
-                cert={cert} 
-                onVerify={handleVerify}
-              />
-            ))
-          ) : (
-            <div className="col-span-full py-12 text-center text-slate-500 bg-slate-50 rounded-xl border border-dashed border-slate-300 flex flex-col items-center justify-center">
-               <svg className="w-12 h-12 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-               </svg>
-               <p>No certificates found.</p>
-            </div>
-          )}
-          
-          {/* Add New Certificate Placeholder (Visible only to Institute/Admin) */}
-          {(userRole === UserRole.INSTITUTE || userRole === UserRole.ADMIN) && (
-            <div 
-              onClick={onAddCertificate}
-              className="border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center p-6 text-slate-400 hover:border-indigo-400 hover:text-indigo-500 cursor-pointer transition-colors min-h-[250px] group"
-            >
-                <div className="w-12 h-12 rounded-full bg-slate-100 group-hover:bg-indigo-50 flex items-center justify-center mb-3 transition-colors">
-                    <svg className="w-6 h-6 group-hover:text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                </div>
-                <span className="font-medium">Issue New Certificate</span>
-            </div>
-          )}
-        </div>
+             )}
+             <button className="px-4 py-3 bg-slate-50 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-100 border border-slate-200 transition-colors">
+                Filters
+             </button>
+         </div>
       </div>
 
-      {/* Verification Modal */}
+      {/* 4. Credentials Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {filteredCertificates.length > 0 ? (
+          filteredCertificates.map((cert) => (
+            <CertificateCard 
+              key={cert.id} 
+              cert={cert} 
+              onVerify={handleVerify}
+            />
+          ))
+        ) : (
+          <div className="col-span-full py-20 text-center">
+             <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+               <svg className="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+               </svg>
+             </div>
+             <h3 className="text-lg font-medium text-slate-900">No Credentials Found</h3>
+             <p className="text-slate-500 mt-1">Try adjusting your search or add a new certificate.</p>
+          </div>
+        )}
+      </div>
+
+      {/* 5. Verification Modal */}
       {showVerifyModal && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 mx-4 animate-in fade-in zoom-in duration-200">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-slate-900">Verifying Credential</h3>
-              <button onClick={() => setShowVerifyModal(false)} className="text-slate-400 hover:text-slate-600">
+        <div className="fixed inset-0 bg-slate-900/60 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white flex justify-between items-start">
+              <div>
+                 <h3 className="text-xl font-bold">Verifying Credential</h3>
+                 <p className="text-blue-100 text-sm mt-1">SkillChain Blockchain Explorer</p>
+              </div>
+              <button onClick={() => setShowVerifyModal(false)} className="text-blue-200 hover:text-white bg-white/10 p-1 rounded-full hover:bg-white/20 transition-all">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 text-green-600 bg-green-50 p-3 rounded-lg border border-green-100">
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-medium text-sm">Database Record Found</span>
+            <div className="p-8 space-y-6">
+              <div className="flex items-start gap-4 animate-in slide-in-from-bottom-2 duration-300 delay-75">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <div>
+                    <h4 className="font-bold text-slate-900">Database Record Found</h4>
+                    <p className="text-sm text-slate-500">The certificate exists in the SkillChain registry.</p>
+                </div>
               </div>
               
-              <div className="flex items-center gap-3 text-green-600 bg-green-50 p-3 rounded-lg border border-green-100">
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-medium text-sm">IPFS Hash Matches Metadata</span>
+              <div className="flex items-start gap-4 animate-in slide-in-from-bottom-2 duration-300 delay-150">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                 <div>
+                    <h4 className="font-bold text-slate-900">Cryptographic Signature Valid</h4>
+                    <p className="text-sm text-slate-500">IPFS content hash matches the blockchain record.</p>
+                </div>
               </div>
 
-              <div className="flex items-center gap-3 text-green-600 bg-green-50 p-3 rounded-lg border border-green-100">
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="font-medium text-sm">Polygon Smart Contract Verified</span>
+              <div className="flex items-start gap-4 animate-in slide-in-from-bottom-2 duration-300 delay-300">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-3m0 0l3-3m-3 3l-3-3" /></svg>
+                </div>
+                 <div>
+                    <h4 className="font-bold text-slate-900">Issuer Verified</h4>
+                    <p className="text-sm text-slate-500">Issued by a recognized Institute wallet.</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mt-4">
+                  <p className="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Verification ID</p>
+                  <p className="font-mono text-sm text-slate-700 break-all">{verifyingId}</p>
               </div>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-slate-100">
-                <p className="text-xs text-slate-500 text-center mb-4">
-                    Verification ID: {verifyingId}
-                </p>
+            <div className="p-6 border-t border-slate-100 bg-slate-50">
               <button 
                 onClick={() => setShowVerifyModal(false)}
-                className="w-full bg-indigo-600 text-white font-medium py-2.5 rounded-lg hover:bg-indigo-700 transition-colors"
+                className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-200"
               >
-                Close Verification
+                Done
               </button>
             </div>
           </div>

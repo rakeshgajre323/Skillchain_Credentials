@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
 import { LandingPage } from './components/LandingPage';
@@ -16,12 +16,49 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   
+  // Theme State
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
   // Temporary state for auth flows
   const [pendingUserId, setPendingUserId] = useState<string>('');
   const [pendingEmail, setPendingEmail] = useState<string>('');
   const [resetEmail, setResetEmail] = useState<string>('');
 
   const isAuthenticated = !!token;
+
+  // Handle Theme Toggle
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  // Apply Dark Mode class and Check for Persisted Session on Mount
+  useEffect(() => {
+    // Theme logic
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  // Check LocalStorage for Remember Me
+  useEffect(() => {
+    const storedToken = localStorage.getItem('skillchain_token');
+    const storedUser = localStorage.getItem('skillchain_user');
+
+    if (storedToken && storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setToken(storedToken);
+        setUser(parsedUser);
+        setCurrentView('DASHBOARD');
+      } catch (e) {
+        console.error("Failed to parse stored user data");
+        localStorage.removeItem('skillchain_token');
+        localStorage.removeItem('skillchain_user');
+      }
+    }
+  }, []);
 
   const handleLoginSuccess = (userData: User, authToken: string) => {
     setUser(userData);
@@ -45,16 +82,21 @@ const App: React.FC = () => {
     setToken(authToken);
     setUser(userData);
     setCurrentView('DASHBOARD');
+    
+    // If they were verifying, we might want to persist if they chose remember me previously,
+    // but typically verification happens once. We'll default to session-only here unless manually added.
   };
 
   const handleLogout = () => {
     setUser(null);
     setToken(null);
+    // Clear persistent storage
+    localStorage.removeItem('skillchain_token');
+    localStorage.removeItem('skillchain_user');
     setCurrentView('LANDING');
   };
 
   const handleNavigate = (view: ViewState) => {
-      // Prevent accessing dashboard if not authenticated
       if (view === 'DASHBOARD' && !isAuthenticated) {
           setCurrentView('LOGIN');
           return;
@@ -62,7 +104,6 @@ const App: React.FC = () => {
       setCurrentView(view);
   };
 
-  // Forgot Password Flow
   const handleForgotPassword = () => {
     setCurrentView('FORGOT_PASSWORD');
   };
@@ -78,15 +119,17 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-300 ${isDarkMode ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
       <Navbar 
         isAuthenticated={isAuthenticated} 
         role={user?.role} 
         onNavigate={handleNavigate}
-        onLogout={handleLogout} 
+        onLogout={handleLogout}
+        isDarkMode={isDarkMode}
+        toggleTheme={toggleTheme}
       />
 
-      <main className="flex-grow w-full">
+      <main className="flex-grow w-full flex flex-col">
         {currentView === 'LANDING' && (
             <LandingPage onNavigate={handleNavigate} />
         )}
@@ -98,6 +141,7 @@ const App: React.FC = () => {
                 onCancel={() => setCurrentView('LANDING')} 
                 onSwitchToSignup={() => setCurrentView('SIGNUP')}
                 onForgotPassword={handleForgotPassword}
+                isDarkMode={isDarkMode}
             />
         )}
 
@@ -106,6 +150,7 @@ const App: React.FC = () => {
                 onSuccess={handleSignUpSuccess}
                 onCancel={() => setCurrentView('LANDING')}
                 onSwitchToLogin={() => setCurrentView('LOGIN')}
+                isDarkMode={isDarkMode}
             />
         )}
 
@@ -154,19 +199,21 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
-                <p>&copy; 2024 SkillChain Credentials. All rights reserved.</p>
-                <div className="flex gap-6 mt-4 md:mt-0">
-                    <a href="#" className="hover:text-indigo-600 transition-colors">Privacy Policy</a>
-                    <a href="#" className="hover:text-indigo-600 transition-colors">Terms of Service</a>
-                    <a href="#" className="hover:text-indigo-600 transition-colors">Contact Support</a>
-                </div>
-            </div>
-        </div>
-      </footer>
+      {/* Footer - Hide on Login/Signup to match the "App like" feel of the design */}
+      {currentView !== 'LOGIN' && currentView !== 'SIGNUP' && (
+        <footer className={`border-t mt-auto transition-colors duration-300 ${isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-400' : 'bg-white border-slate-200 text-slate-500'}`}>
+          <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+              <div className="flex flex-col md:flex-row justify-between items-center text-sm">
+                  <p>&copy; 2024 SkillChain Credentials. All rights reserved.</p>
+                  <div className="flex gap-6 mt-4 md:mt-0">
+                      <a href="#" className="hover:text-indigo-500 transition-colors">Privacy Policy</a>
+                      <a href="#" className="hover:text-indigo-500 transition-colors">Terms of Service</a>
+                      <a href="#" className="hover:text-indigo-500 transition-colors">Contact Support</a>
+                  </div>
+              </div>
+          </div>
+        </footer>
+      )}
     </div>
   );
 };
