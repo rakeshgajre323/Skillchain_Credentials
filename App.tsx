@@ -119,7 +119,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-300 ${isDarkMode ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-300 ${isDarkMode ? 'bg-black text-white' : 'bg-slate-50 text-slate-900'}`}>
       <Navbar 
         isAuthenticated={isAuthenticated} 
         role={user?.role} 
@@ -201,7 +201,7 @@ const App: React.FC = () => {
 
       {/* Footer - Hide on Login/Signup to match the "App like" feel of the design */}
       {currentView !== 'LOGIN' && currentView !== 'SIGNUP' && (
-        <footer className={`border-t mt-auto transition-colors duration-300 ${isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-400' : 'bg-white border-slate-200 text-slate-500'}`}>
+        <footer className={`border-t mt-auto transition-colors duration-300 ${isDarkMode ? 'bg-black border-neutral-800 text-neutral-500' : 'bg-white border-slate-200 text-slate-500'}`}>
           <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
               <div className="flex flex-col md:flex-row justify-between items-center text-sm">
                   <p>&copy; 2024 SkillChain Credentials. All rights reserved.</p>

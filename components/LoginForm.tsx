@@ -167,7 +167,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     if (isDarkMode) {
       return isActive 
         ? 'bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
-        : 'text-slate-400 hover:text-white hover:bg-white/5';
+        : 'text-neutral-400 hover:text-white hover:bg-white/5';
     } else {
       return isActive
         ? 'bg-black text-white shadow-lg'
@@ -176,9 +176,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   };
 
   return (
-    <div className={`flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-50'}`}>
+    <div className={`flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8 ${isDarkMode ? 'bg-black' : 'bg-slate-50'}`}>
       
-      <div className={`w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row transition-all duration-300 ${isDarkMode ? 'bg-slate-800/50 border border-slate-700' : 'bg-white border border-slate-100'}`}>
+      <div className={`w-full max-w-5xl rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row transition-all duration-300 ${isDarkMode ? 'bg-neutral-900 border border-neutral-800' : 'bg-white border border-slate-100'}`}>
         
         <div className="w-full md:w-1/2 relative min-h-[300px] md:min-h-[600px] bg-black group overflow-hidden">
           <img 
@@ -208,7 +208,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           </div>
         </div>
 
-        <div className={`w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center relative ${isDarkMode ? 'bg-slate-900/95' : 'bg-white'}`}>
+        <div className={`w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center relative ${isDarkMode ? 'bg-neutral-900' : 'bg-white'}`}>
           
           <div className="absolute top-6 right-8 flex gap-4 text-xs font-medium opacity-60">
              <span>English <i className="fas fa-chevron-down ml-1"></i></span>
@@ -217,7 +217,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           <div className="max-w-md mx-auto w-full">
             <div className="text-center mb-8">
                <h1 className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Hello ! <br/> Welcome Back</h1>
-               <p className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Please login to continue to your dashboard</p>
+               <p className={`text-sm ${isDarkMode ? 'text-neutral-400' : 'text-slate-500'}`}>Please login to continue to your dashboard</p>
             </div>
             
             {backendStatus === 'error' && (
@@ -240,7 +240,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               </div>
             )}
 
-            <div className={`flex p-1 rounded-xl mb-8 ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`}>
+            <div className={`flex p-1 rounded-xl mb-8 ${isDarkMode ? 'bg-neutral-800' : 'bg-slate-100'}`}>
               {[UserRole.STUDENT, UserRole.INSTITUTE, UserRole.COMPANY].map((role) => (
                 <button
                   key={role}
@@ -261,7 +261,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="relative group">
-                <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none ${isDarkMode ? 'text-slate-400' : 'text-slate-400'}`}>
+                <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none ${isDarkMode ? 'text-neutral-500' : 'text-slate-400'}`}>
                   <i className="far fa-envelope"></i>
                 </div>
                 <input
@@ -272,14 +272,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                   onChange={(e) => setEmail(e.target.value)}
                   className={`block w-full pl-11 pr-4 py-3.5 rounded-xl border outline-none transition-all duration-300 ${
                     isDarkMode 
-                      ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-500 focus:bg-slate-800 focus:border-indigo-500' 
+                      ? 'bg-neutral-950 border-neutral-800 text-white placeholder-neutral-500 focus:bg-black focus:border-indigo-500' 
                       : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-black focus:shadow-md'
                   }`}
                 />
               </div>
 
               <div className="relative group">
-                 <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none ${isDarkMode ? 'text-slate-400' : 'text-slate-400'}`}>
+                 <div className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none ${isDarkMode ? 'text-neutral-500' : 'text-slate-400'}`}>
                   <i className="fas fa-lock"></i>
                 </div>
                 <input
@@ -290,7 +290,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                   onChange={(e) => setPassword(e.target.value)}
                   className={`block w-full pl-11 pr-11 py-3.5 rounded-xl border outline-none transition-all duration-300 ${
                     isDarkMode 
-                      ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-500 focus:bg-slate-800 focus:border-indigo-500' 
+                      ? 'bg-neutral-950 border-neutral-800 text-white placeholder-neutral-500 focus:bg-black focus:border-indigo-500' 
                       : 'bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-black focus:shadow-md'
                   }`}
                 />
@@ -313,18 +313,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                     />
                     <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
                        isDarkMode 
-                         ? 'border-slate-600 bg-slate-800 peer-checked:bg-white peer-checked:border-white' 
+                         ? 'border-neutral-600 bg-neutral-800 peer-checked:bg-white peer-checked:border-white' 
                          : 'border-slate-300 bg-white peer-checked:bg-black peer-checked:border-black'
                     }`}>
                         {rememberMe && <i className={`fas fa-check text-[10px] ${isDarkMode ? 'text-black' : 'text-white'}`}></i>}
                     </div>
-                    <span className={`ml-2 text-xs font-medium select-none ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Remember Me</span>
+                    <span className={`ml-2 text-xs font-medium select-none ${isDarkMode ? 'text-neutral-400' : 'text-slate-500'}`}>Remember Me</span>
                  </label>
 
                 <button 
                   type="button" 
                   onClick={onForgotPassword}
-                  className={`text-xs font-medium transition-colors ${isDarkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-black'}`}
+                  className={`text-xs font-medium transition-colors ${isDarkMode ? 'text-neutral-400 hover:text-white' : 'text-slate-500 hover:text-black'}`}
                 >
                   Recover Password?
                 </button>
@@ -335,7 +335,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 disabled={isLoading}
                 className={`w-full py-3.5 rounded-xl font-bold uppercase tracking-wider text-sm transition-all duration-300 transform active:scale-95 shadow-lg ${
                   isDarkMode 
-                    ? 'bg-white text-black hover:bg-slate-200 shadow-white/10' 
+                    ? 'bg-white text-black hover:bg-neutral-200 shadow-white/10' 
                     : 'bg-black text-white hover:bg-slate-800 shadow-black/20'
                 }`}
               >
@@ -348,10 +348,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className={`w-full border-t ${isDarkMode ? 'border-slate-700' : 'border-slate-200'}`}></div>
+                  <div className={`w-full border-t ${isDarkMode ? 'border-neutral-800' : 'border-slate-200'}`}></div>
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className={`px-2 ${isDarkMode ? 'bg-slate-900 text-slate-500' : 'bg-white text-slate-400'}`}>
+                  <span className={`px-2 ${isDarkMode ? 'bg-neutral-900 text-neutral-500' : 'bg-white text-slate-400'}`}>
                     Or continue with
                   </span>
                 </div>
@@ -361,27 +361,27 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                  <button 
                    type="button" 
                    onClick={() => handleSocialLogin('Google')}
-                   className={`w-14 h-14 rounded-xl border flex items-center justify-center text-xl transition-all duration-300 hover:scale-110 active:scale-95 ${isDarkMode ? 'border-slate-700 hover:bg-slate-800 text-white' : 'border-slate-200 hover:bg-slate-50 text-slate-800'}`}
+                   className={`w-14 h-14 rounded-xl border flex items-center justify-center text-xl transition-all duration-300 hover:scale-110 active:scale-95 ${isDarkMode ? 'border-neutral-700 hover:bg-neutral-800 text-white' : 'border-slate-200 hover:bg-slate-50 text-slate-800'}`}
                  >
                     <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-6 h-6" alt="Google" />
                  </button>
                  <button 
                    type="button" 
                    onClick={() => handleSocialLogin('Apple')}
-                   className={`w-14 h-14 rounded-xl border flex items-center justify-center text-xl transition-all duration-300 hover:scale-110 active:scale-95 ${isDarkMode ? 'border-slate-700 hover:bg-slate-800 text-white' : 'border-slate-200 hover:bg-slate-50 text-slate-800'}`}
+                   className={`w-14 h-14 rounded-xl border flex items-center justify-center text-xl transition-all duration-300 hover:scale-110 active:scale-95 ${isDarkMode ? 'border-neutral-700 hover:bg-neutral-800 text-white' : 'border-slate-200 hover:bg-slate-50 text-slate-800'}`}
                  >
                     <i className="fab fa-apple"></i>
                  </button>
                  <button 
                     type="button" 
                     onClick={() => handleSocialLogin('Facebook')}
-                    className={`w-14 h-14 rounded-xl border flex items-center justify-center text-xl transition-all duration-300 hover:scale-110 active:scale-95 ${isDarkMode ? 'border-slate-700 hover:bg-slate-800 text-blue-500' : 'border-slate-200 hover:bg-slate-50 text-blue-600'}`}
+                    className={`w-14 h-14 rounded-xl border flex items-center justify-center text-xl transition-all duration-300 hover:scale-110 active:scale-95 ${isDarkMode ? 'border-neutral-700 hover:bg-neutral-800 text-blue-500' : 'border-slate-200 hover:bg-slate-50 text-blue-600'}`}
                  >
                     <i className="fab fa-facebook-f"></i>
                  </button>
               </div>
 
-              <div className={`text-center text-xs mt-8 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              <div className={`text-center text-xs mt-8 ${isDarkMode ? 'text-neutral-400' : 'text-slate-500'}`}>
                 Don't have an account? 
                 <button onClick={onSwitchToSignup} className={`font-bold ml-1 hover:underline ${isDarkMode ? 'text-white' : 'text-black'}`}>
                   Create Account!
