@@ -159,6 +159,7 @@ app.get('/api/seed-check', async (req, res) => {
                 ipfsCid: 'QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco',
                 blockchainTx: '0x7129038...8923',
                 isValid: true,
+                imageUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1000&auto=format&fit=crop'
             },
             {
                 certificateId: 'crt-99120-uuid',
@@ -171,6 +172,7 @@ app.get('/api/seed-check', async (req, res) => {
                 ipfsCid: 'QmZ43...kLm2',
                 blockchainTx: '0x82301...1120',
                 isValid: true,
+                // No image for this one to test fallback
             }
         ];
         await Certificate.insertMany(mockData);

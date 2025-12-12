@@ -31,6 +31,7 @@ export interface Certificate {
   ipfsCid: string;
   blockchainTx: string;
   isValid: boolean;
+  imageUrl?: string; // Optional custom image
 }
 
 export interface AuthState {

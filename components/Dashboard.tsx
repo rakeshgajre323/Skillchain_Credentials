@@ -17,6 +17,7 @@ const MOCK_CERTIFICATES: Certificate[] = [
     ipfsCid: 'QmXoypizjW3WknFiJnKLwHCnL72vedxjQkDDP1mXWo6uco',
     blockchainTx: '0x7129038...8923',
     isValid: true,
+    imageUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1000&auto=format&fit=crop'
   },
   {
     id: '2',
@@ -199,13 +200,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ userRole, userName, onAddC
                       </svg>
                       {status === 'db-down' ? 'Database Offline' : 'Offline Mode'}
                   </div>
-                  <button 
-                    onClick={handleRetry}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium flex items-center gap-1"
-                  >
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                    Retry Connection
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button 
+                        onClick={handleRetry}
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium flex items-center gap-1"
+                    >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        Retry Connection
+                    </button>
+                    <span className="text-slate-300 dark:text-neutral-700">|</span>
+                    <a 
+                        href="#" 
+                        onClick={(e) => { e.preventDefault(); alert("System Status: All systems operational (Mock)"); }}
+                        className="text-xs text-slate-500 dark:text-neutral-500 hover:text-slate-800 dark:hover:text-neutral-300 hover:underline font-medium"
+                    >
+                        Check System Status
+                    </a>
+                  </div>
                 </div>
              )}
         </div>

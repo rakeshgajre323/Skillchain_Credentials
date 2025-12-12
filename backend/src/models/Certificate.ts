@@ -42,6 +42,10 @@ const certificateSchema = new mongoose.Schema({
     type: Boolean, 
     default: true 
   },
+  imageUrl: {
+    type: String,
+    required: false
+  }
 }, {
   timestamps: true,
 });
