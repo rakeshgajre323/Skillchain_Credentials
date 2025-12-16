@@ -80,7 +80,7 @@ router.post('/register', async (req, res) => {
       recognitionNumber: role === 'INSTITUTE' ? recognitionNumber : undefined,
       website: role === 'COMPANY' ? website : undefined,
       address: role === 'INSTITUTE' ? address : undefined,
-    });
+    } as any);
 
     // 4. Generate & Send OTP
     const code = genOtpCode();
@@ -90,7 +90,7 @@ router.post('/register', async (req, res) => {
       userId: user._id,
       codeHash,
       expiresAt: new Date(Date.now() + OTP_EXPIRY_MIN * 60 * 1000),
-    });
+    } as any);
 
     await sendEmail(email, code);
 
@@ -235,7 +235,7 @@ router.post('/resend-otp', async (req, res) => {
       userId: user._id,
       codeHash,
       expiresAt: new Date(Date.now() + OTP_EXPIRY_MIN * 60 * 1000),
-    });
+    } as any);
 
     await sendEmail(user.email, code);
     res.json({ message: 'New code sent' });
@@ -261,7 +261,7 @@ router.post('/forgot-password', async (req, res) => {
         userId: user._id,
         codeHash,
         expiresAt: new Date(Date.now() + OTP_EXPIRY_MIN * 60 * 1000),
-      });
+      } as any);
 
       await sendEmail(email, code, true);
     }

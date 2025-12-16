@@ -14,7 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors() as any);
+app.use(cors() as express.RequestHandler);
 app.use(express.json());
 
 // Connect to MongoDB
@@ -83,6 +83,50 @@ app.post('/api/certificates', async (req, res) => {
   } catch (error) {
     console.error('Error creating certificate:', error);
     res.status(500).json({ message: 'Failed to create certificate' });
+  }
+});
+
+// PUT /api/certificates/:id - Update a certificate
+app.put('/api/certificates/:id', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ message: 'Database disconnected' });
+    }
+
+    // In real app, check auth/ownership
+    const { issuerName } = req.body;
+    const certId = req.params.id;
+    
+    // Use findOneAndUpdate with the public ID or mongo ID. 
+    // The frontend passes cert.id which is likely the mongo ID string if fetched from DB, or '1' if mock.
+    // Let's try to update by _id.
+    let updatedCert;
+    if (mongoose.isValidObjectId(certId)) {
+        updatedCert = await Certificate.findByIdAndUpdate(
+            certId, 
+            { issuerName }, 
+            { new: true }
+        );
+    } else {
+        // Fallback search by certificateId if not a valid ObjectId (e.g. legacy or mock sync)
+        updatedCert = await Certificate.findOneAndUpdate(
+            { certificateId: certId },
+            { issuerName },
+            { new: true }
+        );
+    }
+
+    if (!updatedCert) {
+      return res.status(404).json({ message: 'Certificate not found' });
+    }
+
+    res.json({
+        ...updatedCert.toObject(),
+        id: updatedCert._id.toString()
+    });
+  } catch (error) {
+    console.error('Error updating certificate:', error);
+    res.status(500).json({ message: 'Failed to update certificate' });
   }
 });
 
