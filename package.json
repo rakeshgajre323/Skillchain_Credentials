@@ -19,7 +19,9 @@
     "nodemailer": "6.9.13",
     "jsonwebtoken": "9.0.2",
     "recharts": "2.12.3",
-    "qrcode": "1.5.3"
+    "qrcode": "1.5.3",
+    "path": "^0.12.7",
+    "@prisma/client": "^7.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
