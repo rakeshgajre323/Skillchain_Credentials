@@ -5,7 +5,7 @@ export enum UserRole {
   ADMIN = 'ADMIN'
 }
 
-export type ViewState = 'LANDING' | 'LOGIN' | 'SIGNUP' | 'VERIFY_OTP' | 'DASHBOARD' | 'FORGOT_PASSWORD' | 'RESET_PASSWORD' | 'ADD_CERTIFICATE';
+export type ViewState = 'LANDING' | 'LOGIN' | 'SIGNUP' | 'VERIFY_OTP' | 'DASHBOARD' | 'FORGOT_PASSWORD' | 'RESET_PASSWORD' | 'ADD_CERTIFICATE' | 'VERIFY';
 
 export interface User {
   id: string;

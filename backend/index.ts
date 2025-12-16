@@ -66,6 +66,34 @@ app.get('/api/certificates', async (req, res) => {
   }
 });
 
+// GET /api/certificates/:id - Fetch single certificate (Public/Verification)
+app.get('/api/certificates/:id', async (req, res) => {
+  try {
+    const certId = req.params.id;
+    let cert;
+    
+    // Check if it's a Mongo ObjectId
+    if (mongoose.isValidObjectId(certId)) {
+       cert = await Certificate.findById(certId);
+    } 
+    
+    // If not found or not ObjectId, try searching by certificateId (UUID)
+    if (!cert) {
+       cert = await Certificate.findOne({ certificateId: certId });
+    }
+    
+    if (!cert) return res.status(404).json({ message: 'Certificate not found' });
+    
+    res.json({
+      ...cert.toObject(),
+      id: cert._id.toString()
+    });
+  } catch (error) {
+    console.error('Error fetching certificate:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+});
+
 // POST /api/certificates - Create a new certificate
 app.post('/api/certificates', async (req, res) => {
   try {

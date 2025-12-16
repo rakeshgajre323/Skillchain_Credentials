@@ -9,6 +9,7 @@ import { ForgotPassword } from './components/ForgotPassword';
 import { ResetPassword } from './components/ResetPassword';
 import { AddCertificateForm } from './components/AddCertificateForm';
 import { AdminDashboard } from './components/AdminDashboard';
+import { VerificationPage } from './components/VerificationPage';
 import { UserRole, ViewState, User } from './types';
 
 const App: React.FC = () => {
@@ -23,6 +24,9 @@ const App: React.FC = () => {
   const [pendingUserId, setPendingUserId] = useState<string>('');
   const [pendingEmail, setPendingEmail] = useState<string>('');
   const [resetEmail, setResetEmail] = useState<string>('');
+  
+  // Verification State
+  const [verificationId, setVerificationId] = useState<string>('');
 
   const isAuthenticated = !!token;
 
@@ -30,6 +34,18 @@ const App: React.FC = () => {
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
   };
+
+  // Check URL for Verification on Mount
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path.startsWith('/verify/')) {
+        const id = path.split('/verify/')[1];
+        if (id) {
+            setVerificationId(id);
+            setCurrentView('VERIFY');
+        }
+    }
+  }, []);
 
   // Apply Dark Mode class and Check for Persisted Session on Mount
   useEffect(() => {
@@ -51,7 +67,10 @@ const App: React.FC = () => {
         const parsedUser = JSON.parse(storedUser);
         setToken(storedToken);
         setUser(parsedUser);
-        setCurrentView('DASHBOARD');
+        // Only set to DASHBOARD if we are not verifying
+        if (!window.location.pathname.startsWith('/verify/')) {
+             setCurrentView('DASHBOARD');
+        }
       } catch (e) {
         console.error("Failed to parse stored user data");
         localStorage.removeItem('skillchain_token');
@@ -120,14 +139,18 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors duration-300 ${isDarkMode ? 'bg-black text-white' : 'bg-slate-50 text-slate-900'}`}>
-      <Navbar 
-        isAuthenticated={isAuthenticated} 
-        role={user?.role} 
-        onNavigate={handleNavigate}
-        onLogout={handleLogout}
-        isDarkMode={isDarkMode}
-        toggleTheme={toggleTheme}
-      />
+      
+      {/* Hide Navbar on Verification Page for clean look */}
+      {currentView !== 'VERIFY' && (
+        <Navbar 
+            isAuthenticated={isAuthenticated} 
+            role={user?.role} 
+            onNavigate={handleNavigate}
+            onLogout={handleLogout}
+            isDarkMode={isDarkMode}
+            toggleTheme={toggleTheme}
+        />
+      )}
 
       <main className="flex-grow w-full flex flex-col">
         {currentView === 'LANDING' && (
@@ -186,6 +209,17 @@ const App: React.FC = () => {
           />
         )}
 
+        {currentView === 'VERIFY' && (
+            <VerificationPage 
+                certificateId={verificationId}
+                onNavigateHome={() => {
+                    // Update URL without reload
+                    window.history.pushState({}, '', '/');
+                    setCurrentView('LANDING');
+                }}
+            />
+        )}
+
         {currentView === 'DASHBOARD' && (
             user?.role === UserRole.ADMIN ? (
               <AdminDashboard />
@@ -199,8 +233,8 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Footer - Hide on Login/Signup to match the "App like" feel of the design */}
-      {currentView !== 'LOGIN' && currentView !== 'SIGNUP' && (
+      {/* Footer - Hide on Login/Signup/Verify */}
+      {currentView !== 'LOGIN' && currentView !== 'SIGNUP' && currentView !== 'VERIFY' && (
         <footer className={`border-t mt-auto transition-colors duration-300 ${isDarkMode ? 'bg-black border-neutral-800 text-neutral-500' : 'bg-white border-slate-200 text-slate-500'}`}>
           <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
               <div className="flex flex-col md:flex-row justify-between items-center text-sm">
