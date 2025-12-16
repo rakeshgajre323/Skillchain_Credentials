@@ -16,6 +16,11 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({ cert, onVerify
   const [isEditing, setIsEditing] = useState(false);
   const [editedIssuer, setEditedIssuer] = useState(cert.issuerName);
 
+  // Sync local state if prop changes
+  useEffect(() => {
+    setEditedIssuer(cert.issuerName);
+  }, [cert.issuerName]);
+
   useEffect(() => {
     if (isExpanded && !qrCodeDataUrl) {
       const verificationUrl = `${window.location.origin}/verify/${cert.certificateId}`;
@@ -113,26 +118,32 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({ cert, onVerify
                 <div className="flex flex-col w-full mr-2">
                   <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-neutral-500 font-bold">Issuer</span>
                   {isEditing ? (
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 w-full">
                       <input 
                         type="text" 
                         value={editedIssuer}
                         onChange={(e) => setEditedIssuer(e.target.value)}
-                        className="w-full text-xs p-1 rounded border border-slate-300 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
+                        className="flex-1 min-w-0 text-xs p-1.5 rounded border border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none dark:border-neutral-600 dark:bg-neutral-800 dark:text-white"
                         onClick={(e) => e.stopPropagation()}
+                        autoFocus
                       />
-                      <button onClick={handleSaveIssuer} className="text-emerald-500 hover:text-emerald-600"><i className="fas fa-check"></i></button>
-                      <button onClick={handleCancelEdit} className="text-red-500 hover:text-red-600"><i className="fas fa-times"></i></button>
+                      <button onClick={handleSaveIssuer} className="p-1 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded transition-colors" title="Save">
+                        <i className="fas fa-check"></i>
+                      </button>
+                      <button onClick={handleCancelEdit} className="p-1 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors" title="Cancel">
+                        <i className="fas fa-times"></i>
+                      </button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2 group/edit">
+                    <div className="flex items-center gap-2 group/edit relative">
                       <span className="text-xs font-semibold text-slate-700 dark:text-neutral-300 truncate max-w-[140px]" title={cert.issuerName}>
                         {cert.issuerName}
                       </span>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                        className="text-slate-300 hover:text-blue-500 opacity-0 group-hover/edit:opacity-100 transition-opacity"
+                        className="text-slate-400 hover:text-blue-500 transition-colors p-1"
                         aria-label="Edit Issuer"
+                        title="Edit Issuer Name"
                       >
                         <i className="fas fa-pencil-alt text-[10px]"></i>
                       </button>

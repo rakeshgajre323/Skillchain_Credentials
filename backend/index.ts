@@ -14,8 +14,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors() as express.RequestHandler);
-app.use(express.json());
+// Casting to any to avoid TypeScript overload mismatch with Express types
+app.use(cors() as any);
+app.use(express.json() as any);
 
 // Connect to MongoDB
 connectDB();

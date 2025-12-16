@@ -68,7 +68,7 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // 3. Create User (Pending)
-    const user = await User.create({
+    const newUser = new User({
       role,
       name,
       email,
@@ -80,7 +80,9 @@ router.post('/register', async (req, res) => {
       recognitionNumber: role === 'INSTITUTE' ? recognitionNumber : undefined,
       website: role === 'COMPANY' ? website : undefined,
       address: role === 'INSTITUTE' ? address : undefined,
-    } as any);
+    });
+
+    const user = await newUser.save();
 
     // 4. Generate & Send OTP
     const code = genOtpCode();
